@@ -53,6 +53,7 @@ def printMenu():
     print("3- Consultar crimenes en un rango de fechas")
     print("4- Consultar crimenes por codigo y fecha")
     # TODO lab 9, agregar opcion 5 en el menu, consultar por REPORTING_AREA
+    print("5- Consultar crímenes por area reportada")
     print("0- Salir")
     print("*******************************************")
 
@@ -79,6 +80,10 @@ while True:
         print("Mayor Llave: " + str(controller.maxKey(cont)))
         # TODO lab 9, imprimir las propiedades del indice de areas
         # propiedades: altura, elementos y llaves min y max
+        print("Altura del arbol de areas: " + str(controller.indexHeightAreas(cont)))
+        print("Elementos del arbol: " + str(controller.indexSizeAreas(cont)))
+        print("Menor llave: " + str(controller.minKeyAreas(cont)))
+        print("Mayor llave: " + str(controller.maxKeyAreas(cont)))
 
     elif int(inputs[0]) == 3:
         print("\nBuscando crimenes en un rango de fechas: ")

@@ -61,6 +61,8 @@ def newAnalyzer():
     analyzer["dateIndex"] = om.newMap(omaptype="BST",
                                       comparefunction=compareDates)
     # TODO lab 9, crear el indice ordenado por areas reportadas
+    analyzer["areaIndex"] = om.newMap(omaptype="BST", 
+                                      comparefunction=compareAreas)
     return analyzer
 
 
@@ -74,6 +76,7 @@ def addCrime(analyzer, crime):
     lt.addLast(analyzer["crimes"], crime)
     updateDateIndex(analyzer["dateIndex"], crime)
     # TODO lab 9, actualizar el indice por areas reportadas
+    updateAreaIndex(analyzer["areaIndex"], crime)
     return analyzer
 
 
@@ -91,6 +94,14 @@ def updateAreaIndex(map, crime):
     # revisar si el area ya esta en el indice
 
     # si el area ya esta en el indice, adicionar el crimen a la lista
+    reportedarea = crime["REPORTING_AREA"]
+    entry = om.get(map, reportedarea)
+    if entry is None:
+        areaentry = newAreaEntry(crime)
+        om.put(map, reportedarea, areaentry)
+    else: 
+        areaentry = me.getValue(entry)
+    addAreaIndex(areaentry, crime)
     return map
 
 
@@ -99,7 +110,12 @@ def newAreaEntry(crime):
     Crea una entrada para el indice de areas reportadas
     """
     # TODO lab 9, crear una entrada para el indice de areas reportadas
-    entry = {"lstcrimes": None, }
+    entry = {"lstcrimes": None, "areaIndex": None}
+    entry["areaIndex"] = m.newMap(numelements=20, 
+                                  maptype="PROBING", 
+                                  comparefunction=compareAreas)
+    entry["lstcrimes"] = lt.newList("SINGLE_LINKED", compareDates)
+    lt.addLast(entry["lstcrimes"], crime)
     return entry
 
 
@@ -108,7 +124,25 @@ def addAreaIndex(area_entry, crime):
     Adiciona un crimen a la lista de crimenes de un area
     """
     # TODO lab 9, adicionar crimen a la lista de crimenes de un area
+    lst = area_entry["lstcrimes"]
+    lt.addLast(lst, crime)
+    areaIndex = area_entry["areaIndex"]
+    areaentry = m.get(areaIndex, crime["REPORTING_AREA"])
+    if (areaentry is None):
+        entry = new_area_entry(crime["REPORTING_AREA"], crime)
+        lt.addLast(entry["lstareas"], crime)
+        m.put(areaIndex, crime["REPORTING_AREA"], entry)
+    else: 
+        entry = me.getValue(areaentry)
+        lt.addLast(entry["lstareas"], crime)
     return area_entry
+
+def new_area_entry(area, crime):
+    areaentry = {"area": None, "lstareas": None}
+    areaentry["area"] = area
+    areaentry["lstareas"] = lt.newList("SINGLE_LINKED", compareAreas)
+    lt.addLast(areaentry["lstareas"], crime)
+    return areaentry
 
 
 def updateDateIndex(map, crime):
@@ -224,7 +258,7 @@ def indexHeightAreas(analyzer):
     Altura del arbol por areas
     """
     # TODO lab 9, leer la altura del arbol por areas
-    pass
+    return om.height(analyzer["areaIndex"])
 
 
 def indexSizeAreas(analyzer):
@@ -232,7 +266,7 @@ def indexSizeAreas(analyzer):
     Numero de elementos en el indice por areas
     """
     # TODO lab 9, leer el numero de elementos en el indice por areas
-    pass
+    return om.size(analyzer["areaIndex"])
 
 
 def minKeyAreas(analyzer):
@@ -240,7 +274,7 @@ def minKeyAreas(analyzer):
     Llave mas pequena por areas
     """
     # TODO lab 9, leer la llave mas pequena por areas
-    pass
+    return om.minKey(analyzer["areaIndex"])
 
 
 def maxKeyAreas(analyzer):
@@ -248,7 +282,7 @@ def maxKeyAreas(analyzer):
     Llave mas grande por areas
     """
     # TODO lab 9, leer la llave mas grande por areas
-    pass
+    return om.maxKey(analyzer["areaIndex"])
 
 
 def getCrimesByRangeArea(analyzer, initialArea, finalArea):
@@ -256,7 +290,10 @@ def getCrimesByRangeArea(analyzer, initialArea, finalArea):
     Retorna el numero de crimenes en un rango de areas
     """
     # TODO lab 9, completar la consulta de crimenes por rango de areas
+    lst = om.values(analyzer["areaIndex"], initialArea, finalArea)
     totalcrimes = 0
+    for lstarea in lt.iterator(lst):
+        totalcrimes += lt.size(lstarea["lstcrimes"])
     return totalcrimes
 
 
@@ -319,7 +356,21 @@ def compareAreas(area1, area2):
     Compara dos areas
     """
     # area = "REPORTING_AREA"
-    pass
+    if type(area2) != dict:
+        if area1 == " ":
+            area1 = 0
+        if area2 == " ":
+            area2 = 0
+            
+        area1 = int(area1)
+        area2 = int(area2)
+            
+        if (area1 == area2):
+           return 0
+        elif (area1 > area2):
+           return 1
+        else:
+           return -1
 
 
 def compareOffenses(offense1, offense2):
